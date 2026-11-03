@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_requests"
+        android:icon="@drawable/ic_requests"
+        android:title="Requests" />
+    <item
+        android:id="@+id/nav_manage_rooms"
+        android:icon="@drawable/ic_manage"
+        android:title="Rooms" />
+    <item
+        android:id="@+id/nav_verify"
+        android:icon="@drawable/ic_verify"
+        android:title="Verify" />
+    <item
+        android:id="@+id/nav_alerts"
+        android:icon="@drawable/ic_alerts"
+        android:title="Alerts" />
+    <item
+        android:id="@+id/nav_profile"
+        android:icon="@drawable/ic_profile"
+        android:title="Profile" />
+</menu>
