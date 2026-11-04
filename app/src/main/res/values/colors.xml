@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Brand palette -->
     <color name="primary">#2447E0</color>
     <color name="primary_dark">#1B37B0</color>
+    <color name="primary_light">#4C6FFF</color>
+    <color name="accent">#FFB020</color>
     <color name="white">#FFFFFF</color>
     <color name="bg">#F3F5F9</color>
     <color name="ink">#1C2433</color>
