@@ -2,6 +2,8 @@ package com.example.reserba.ui
 
 import android.content.Intent
 import android.os.Bundle
+import android.text.method.HideReturnsTransformationMethod
+import android.text.method.PasswordTransformationMethod
 import android.util.Patterns
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
@@ -11,16 +13,28 @@ import com.example.reserba.databinding.ActivityLoginBinding
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var b: ActivityLoginBinding
+    private var passwordVisible = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         b = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(b.root)
 
+        b.tvShowPassword.setOnClickListener { togglePassword() }
         b.btnLogin.setOnClickListener { attemptLogin() }
         b.tvRegister.setOnClickListener {
             startActivity(Intent(this, RegisterActivity::class.java))
         }
+    }
+
+    /** "Show / Hide" text next to the password field. */
+    private fun togglePassword() {
+        passwordVisible = !passwordVisible
+        b.etPassword.transformationMethod =
+            if (passwordVisible) HideReturnsTransformationMethod.getInstance()
+            else PasswordTransformationMethod.getInstance()
+        b.etPassword.setSelection(b.etPassword.text?.length ?: 0)
+        b.tvShowPassword.text = if (passwordVisible) "Hide" else "Show"
     }
 
     private fun attemptLogin() {

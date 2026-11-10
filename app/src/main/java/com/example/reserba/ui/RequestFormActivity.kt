@@ -11,6 +11,9 @@ import com.example.reserba.databinding.ActivityRequestFormBinding
 import com.example.reserba.databinding.ItemSuggestionBinding
 import com.example.reserba.model.Room
 import com.example.reserba.util.TimeUtils
+import com.example.reserba.data.Organizations
+import com.example.reserba.model.Role
+import com.example.reserba.model.User
 
 class RequestFormActivity : AppCompatActivity() {
 
@@ -34,7 +37,7 @@ class RequestFormActivity : AppCompatActivity() {
         room = found
         date = intent.getStringExtra(Extras.DATE) ?: TimeUtils.dateOffset(2)
 
-        b.etOrg.setText(user.organization)
+        setupOrgDropdown(user)
         b.btnBack.setOnClickListener { finish() }
         b.btnDate.setOnClickListener { pickDate() }
         b.btnSend.setOnClickListener { onSend() }
@@ -53,6 +56,15 @@ class RequestFormActivity : AppCompatActivity() {
     }
 
     // ----------------------------------------------------------- form setup
+
+    private fun setupOrgDropdown(user: User) {
+        val options = Organizations.forRole(user.role)
+        b.tilOrg.hint = if (user.role == Role.FACULTY) "Organization / meeting type" else "College / department"
+        b.etOrg.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, options))
+        // Pre-select when the user's registered organization is one of the choices.
+        options.firstOrNull { it.equals(user.organization, ignoreCase = true) }
+            ?.let { b.etOrg.setText(it, false) }
+    }
 
     private fun bindRoom(keepStart: String?, keepEnd: String?) {
         b.tvFormRoom.text = "${room.name}  •  ${room.building}" +
@@ -141,7 +153,7 @@ class RequestFormActivity : AppCompatActivity() {
         val end = selectedEnd()
 
         if (org.isEmpty()) {
-            showError("Enter your organization or department.")
+            showError("Choose your college or organization from the list.")
             return
         }
         // BR-02, 03, 04, 05, 10, 11, 12
