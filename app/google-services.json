@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "394614570285",
+    "project_id": "reserba-cf23b",
+    "storage_bucket": "reserba-cf23b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:394614570285:android:fdce72c52bca315b38e7a4",
+        "android_client_info": {
+          "package_name": "com.example.reserba"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA1GDuWXKRRGI73HuT0ShnRm-5H03va55c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

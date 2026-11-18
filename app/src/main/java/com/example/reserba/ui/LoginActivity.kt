@@ -7,8 +7,10 @@ import android.text.method.PasswordTransformationMethod
 import android.util.Patterns
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import com.example.reserba.data.MockData
+import androidx.lifecycle.lifecycleScope
+import com.example.reserba.data.FirebaseRepository
 import com.example.reserba.databinding.ActivityLoginBinding
+import kotlinx.coroutines.launch
 
 class LoginActivity : AppCompatActivity() {
 
@@ -20,6 +22,11 @@ class LoginActivity : AppCompatActivity() {
         b = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(b.root)
 
+        // Seed initial demo user credentials into Firebase Database if empty
+        lifecycleScope.launch {
+            FirebaseRepository.seedInitialCredentialsIfNeeded()
+        }
+
         b.tvShowPassword.setOnClickListener { togglePassword() }
         b.btnLogin.setOnClickListener { attemptLogin() }
         b.tvRegister.setOnClickListener {
@@ -27,7 +34,7 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    /** "Show / Hide" text next to the password field. */
+
     private fun togglePassword() {
         passwordVisible = !passwordVisible
         b.etPassword.transformationMethod =
@@ -56,15 +63,22 @@ class LoginActivity : AppCompatActivity() {
         }
         if (!valid) return
 
-        val result = MockData.login(email, password)
-        if (result.user == null) {
-            b.tvError.text = result.error
-            b.tvError.visibility = View.VISIBLE
-            return
-        }
+        b.btnLogin.isEnabled = false
+        b.btnLogin.text = "Logging in..."
 
-        // Role-based start: MainActivity shows the requester or administrator home.
-        startActivity(Intent(this, MainActivity::class.java))
-        finish()
+        lifecycleScope.launch {
+            val result = FirebaseRepository.login(email, password)
+            if (result.user == null) {
+                b.tvError.text = result.error
+                b.tvError.visibility = View.VISIBLE
+                b.btnLogin.isEnabled = true
+                b.btnLogin.text = "Log In"
+                return@launch
+            }
+
+            // Role-based start: MainActivity shows the requester or administrator home.
+            startActivity(Intent(this@LoginActivity, MainActivity::class.java))
+            finish()
+        }
     }
 }

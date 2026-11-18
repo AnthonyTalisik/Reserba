@@ -11,21 +11,18 @@ import com.example.reserba.model.RoomType
 import com.example.reserba.model.Slot
 import com.example.reserba.model.SlotStatus
 import com.example.reserba.model.User
+import com.example.reserba.util.PasswordUtils
 import com.example.reserba.util.TimeUtils
 
 data class LoginResult(val user: User?, val error: String?)
 
-/**
- * Phase 1: in-memory mock data + all the business rules (BR-01 .. BR-15).
- * In Phase 2 this object is replaced by Firebase Authentication + Cloud Firestore,
- * keeping the same function names so the screens barely change.
- */
+
 object MockData {
 
-    const val MAX_PENDING = 3                 // BR-11
-    const val MAX_DURATION_HOURS = 4L         // BR-04
-    const val MIN_ADVANCE_HOURS = 24L         // BR-03
-    const val MAX_ADVANCE_DAYS = 30L          // BR-03
+    const val MAX_PENDING = 3
+    const val MAX_DURATION_HOURS = 4L
+    const val MIN_ADVANCE_HOURS = 24L
+    const val MAX_ADVANCE_DAYS = 30L
 
     private const val HOUR_MS = 3_600_000L
     private const val DAY_MS = 86_400_000L
@@ -41,17 +38,16 @@ object MockData {
     private var seq = 1000
     fun nextId(prefix: String) = "$prefix${seq++}"
 
-    // ---------------------------------------------------------------- lookups
+
 
     fun roomById(id: String): Room? = rooms.firstOrNull { it.roomId == id }
     fun reservationById(id: String): Reservation? = reservations.firstOrNull { it.reservationId == id }
 
-    // ------------------------------------------------------------ auth (FR-01)
 
     fun login(email: String, password: String): LoginResult {
         val u = users.firstOrNull { it.email.equals(email.trim(), ignoreCase = true) }
             ?: return LoginResult(null, "No account found for that email.")
-        if (u.password != password) return LoginResult(null, "Incorrect password.")
+        if (!PasswordUtils.verify(password, u.password)) return LoginResult(null, "Incorrect password.")
         return when (u.accountStatus) {
             AccountStatus.PENDING ->
                 LoginResult(null, "Your account is still waiting for administrator verification.")
@@ -70,10 +66,11 @@ object MockData {
         currentUser = null
     }
 
-    /** Returns an error message, or null when the account was created (as Pending). BR-12, BR-13, BR-15. */
+
     fun register(
-        fullName: String, idNumber: String, organization: String,
-        email: String, password: String, role: Role
+        firstName: String, middleName: String, lastName: String,
+        idNumber: String, organization: String, email: String,
+        password: String, role: Role
     ): String? {
         if (role == Role.ADMIN) return "Administrator accounts cannot be self-registered."
         // A rejected account must be able to register again with corrected information.
@@ -87,9 +84,11 @@ object MockData {
         }
         val u = User(
             uid = nextId("u"),
-            fullName = fullName.trim(),
+            firstName = firstName.trim(),
+            middleName = middleName.trim(),
+            lastName = lastName.trim(),
             email = email.trim(),
-            password = password,
+            password = PasswordUtils.hash(password),
             role = role,
             idNumber = idNumber.trim(),
             organization = organization.trim(),
@@ -459,11 +458,11 @@ object MockData {
 
     private fun seed() {
         // Demo accounts (also listed on the Login screen)
-        users += User("u_admin", "Room Administrator", "admin@reserba.edu", "admin123", Role.ADMIN, "ADMIN-001", "Facilities Office", AccountStatus.ACTIVE)
-        users += User("u_student", "Maria Santos", "student@school.edu", "123456", Role.STUDENT, "24-0124", "CS Society", AccountStatus.ACTIVE)
-        users += User("u_faculty", "Prof. Reyes", "faculty@school.edu", "123456", Role.FACULTY, "F-1020", "Computer Studies Dept.", AccountStatus.ACTIVE)
-        users += User("u_p1", "Juan D. Cruz", "juan@school.edu", "123456", Role.STUDENT, "24-0311", "Student Council", AccountStatus.PENDING)
-        users += User("u_p2", "Ana Lopez", "ana@school.edu", "123456", Role.STUDENT, "23-1180", "BSIT 3", AccountStatus.PENDING)
+        users += User("u_admin", "Room", "", "Administrator", "admin@reserba.edu", PasswordUtils.hash("admin123"), Role.ADMIN, "ADMIN-001", "Facilities Office", AccountStatus.ACTIVE)
+        users += User("u_student", "Maria", "", "Santos", "student@school.edu", PasswordUtils.hash("123456"), Role.STUDENT, "24-0124", "CS Society", AccountStatus.ACTIVE)
+        users += User("u_faculty", "Prof.", "", "Reyes", "faculty@school.edu", PasswordUtils.hash("123456"), Role.FACULTY, "F-1020", "Computer Studies Dept.", AccountStatus.ACTIVE)
+        users += User("u_p1", "Juan", "D.", "Cruz", "juan@school.edu", PasswordUtils.hash("123456"), Role.STUDENT, "24-0311", "Student Council", AccountStatus.PENDING)
+        users += User("u_p2", "Ana", "", "Lopez", "ana@school.edu", PasswordUtils.hash("123456"), Role.STUDENT, "23-1180", "BSIT 3", AccountStatus.PENDING)
 
         rooms += Room("r301", "Room 301 - CCS Lab", "Main Building", "3rd Floor", RoomType.CLASSROOM, 40, listOf("Projector", "Whiteboard"), description = "Computer lab with 40 workstations.")
         rooms += Room("r302", "Room 302", "Main Building", "3rd Floor", RoomType.CLASSROOM, 35, listOf("Projector", "Whiteboard"))

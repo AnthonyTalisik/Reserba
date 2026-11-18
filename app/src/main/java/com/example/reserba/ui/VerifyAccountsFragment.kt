@@ -5,10 +5,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.reserba.adapter.AccountAdapter
+import com.example.reserba.data.FirebaseRepository
 import com.example.reserba.data.MockData
 import com.example.reserba.databinding.FragmentVerifyAccountsBinding
+import com.example.reserba.model.AccountStatus
+import kotlinx.coroutines.launch
 
 /** Verify Accounts (Admin): approve or reject new registrations after checking the ID (FR-11). */
 class VerifyAccountsFragment : Fragment() {
@@ -30,12 +34,20 @@ class VerifyAccountsFragment : Fragment() {
         adapter = AccountAdapter(
             onApprove = { u ->
                 MockData.approveAccount(u.uid, admin)
+                lifecycleScope.launch {
+                    FirebaseRepository.updateUserStatus(u.uid, AccountStatus.ACTIVE, "", admin.uid)
+                }
                 requireContext().toast("${u.fullName}'s account was approved.")
                 refresh()
             },
             onReject = { u ->
                 requireContext().promptRemarks("Reject account", "Reason (required)") { remarks ->
                     val error = MockData.rejectAccount(u.uid, remarks, admin)
+                    if (error == null) {
+                        lifecycleScope.launch {
+                            FirebaseRepository.updateUserStatus(u.uid, AccountStatus.REJECTED, remarks, admin.uid)
+                        }
+                    }
                     requireContext().toast(error ?: "${u.fullName}'s account was rejected.")
                     refresh()
                 }
