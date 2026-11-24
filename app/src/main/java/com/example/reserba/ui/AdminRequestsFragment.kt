@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.reserba.R
@@ -17,7 +18,7 @@ import com.example.reserba.model.Reservation
 import com.example.reserba.model.ReservationStatus
 import com.example.reserba.util.TimeUtils
 
-/** Pending Requests (Admin): queue with room / date / status filters and overlap flags (FR-06). */
+/** Requests Dashboard (Admin): queue with room / date / status filters and overlap flags (FR-06). */
 class AdminRequestsFragment : Fragment() {
 
     private var _b: FragmentAdminRequestsBinding? = null
@@ -25,6 +26,7 @@ class AdminRequestsFragment : Fragment() {
 
     private lateinit var adapter: AdminRequestAdapter
     private var spinnerRoomCount = -1
+    private var filterOverlappingOnly = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _b = FragmentAdminRequestsBinding.inflate(inflater, container, false)
@@ -46,11 +48,25 @@ class AdminRequestsFragment : Fragment() {
         b.rvRequests.layoutManager = LinearLayoutManager(requireContext())
         b.rvRequests.adapter = adapter
 
+        // Card clicks: Waiting box selects Pending filter, Overlapping box toggles Overlapping filter
+        b.cardWaiting.setOnClickListener {
+            filterOverlappingOnly = false
+            b.chipGroupStatus.check(R.id.chipPending)
+        }
+
+        b.cardOverlapping.setOnClickListener {
+            filterOverlappingOnly = !filterOverlappingOnly
+            refresh()
+        }
+
         b.spRoom.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(p: AdapterView<*>?, v: View?, pos: Int, id: Long) = refresh()
             override fun onNothingSelected(p: AdapterView<*>?) {}
         }
-        b.chipGroupStatus.setOnCheckedStateChangeListener { _, _ -> refresh() }
+        b.chipGroupStatus.setOnCheckedStateChangeListener { _, _ ->
+            filterOverlappingOnly = false
+            refresh()
+        }
         b.chipToday.setOnCheckedChangeListener { _, _ -> refresh() }
     }
 
@@ -73,7 +89,16 @@ class AdminRequestsFragment : Fragment() {
 
         val pendingAll = MockData.reservations.filter { it.status == ReservationStatus.PENDING }
         b.tvWaiting.text = pendingAll.size.toString()
-        b.tvOverlapping.text = pendingAll.count { MockData.overlappingPending(it).isNotEmpty() }.toString()
+        val overlappingCount = pendingAll.count { MockData.overlappingPending(it).isNotEmpty() }
+        b.tvOverlapping.text = overlappingCount.toString()
+
+        // Highlight card when overlapping filter is active
+        val cardBgColor = if (filterOverlappingOnly) {
+            ContextCompat.getColor(requireContext(), R.color.amber_bg)
+        } else {
+            ContextCompat.getColor(requireContext(), R.color.white)
+        }
+        b.cardOverlapping.setCardBackgroundColor(cardBgColor)
 
         val roomPos = b.spRoom.selectedItemPosition
         val roomId = if (roomPos <= 0) null else MockData.rooms.getOrNull(roomPos - 1)?.roomId
@@ -86,7 +111,8 @@ class AdminRequestsFragment : Fragment() {
 
         val list = MockData.reservations.filter {
             (roomId == null || it.roomId == roomId) &&
-                (status == null || it.status == status) &&
+                (!filterOverlappingOnly || MockData.overlappingPending(it).isNotEmpty()) &&
+                (filterOverlappingOnly || status == null || it.status == status) &&
                 (!b.chipToday.isChecked || it.date == today)
         }.sortedBy { it.startMillis }
 

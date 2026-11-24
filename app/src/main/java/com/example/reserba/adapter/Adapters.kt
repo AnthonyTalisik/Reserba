@@ -218,6 +218,7 @@ class AccountAdapter(
         b.tvAccId.text = "ID: ${u.idNumber}"
         b.tvAccRole.text = if (u.role == Role.FACULTY) "Faculty" else "Student"
         b.tvAccOrg.text = "Organization / department: ${u.organization}"
+        b.tvAccRegisteredAt.text = "Registered: ${TimeUtils.formatDateTime(u.createdAt)}"
         b.btnApproveAcc.setOnClickListener { onApprove(u) }
         b.btnRejectAcc.setOnClickListener { onReject(u) }
     }

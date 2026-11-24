@@ -9,6 +9,7 @@ import androidx.fragment.app.Fragment
 import com.example.reserba.data.MockData
 import com.example.reserba.databinding.FragmentProfileBinding
 import com.example.reserba.model.Role
+import com.example.reserba.util.TimeUtils
 
 class ProfileFragment : Fragment() {
 
@@ -30,7 +31,7 @@ class ProfileFragment : Fragment() {
             Role.FACULTY -> "Faculty / Staff"
             Role.ADMIN -> "Room Administrator"
         }
-        b.tvProfileDetail.text = "Email: ${user.email}\nID number: ${user.idNumber}\nOrganization / department: ${user.organization}"
+        b.tvProfileDetail.text = "Email: ${user.email}\nID number: ${user.idNumber}\nOrganization / department: ${user.organization}\nRegistered: ${TimeUtils.formatDateTime(user.createdAt)}"
 
         b.btnLogout.setOnClickListener {
             MockData.logout()
